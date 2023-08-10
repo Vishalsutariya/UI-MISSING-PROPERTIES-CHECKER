@@ -2,7 +2,7 @@ import fetch from 'node-fetch';
 
 const repoOwner = 'QQyrus';
 const repoName = 'ui-configuration';
-const accessToken = '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';
+const accessToken = 'add-your-github-generated-token';
 
 // Folders to compare (excluding the base folder)
 const foldersToCompare = ['prod-ui-config', 'qyrus-ui-config']; // Add more folders as needed
