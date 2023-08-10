@@ -1,0 +1,44 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs
+logs/
+*.log
+
+# Dependency directories
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Compiled binary addons (Node-gyp)
+build/Release
+
+# Dependency files
+.sass-cache/
+bower_components/
+.DS_Store
+
+# IDE specific files
+.vscode/
+.idea/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+
+# Build
+/dist
+/out
