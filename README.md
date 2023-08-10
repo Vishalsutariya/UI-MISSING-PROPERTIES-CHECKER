@@ -2,8 +2,7 @@
 
 Motivation
 
-Had to wake up early morning to add missing properties in the client's environment
-
+Had to wake up early morning to add missing properties in the client's environment and 
 Had to waste half a day adding missing properties post-deployment and had to do deployment again
 
 
