@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 
 const repoOwner = 'QQyrus';
 const repoName = 'ui-configuration';
-const accessToken = '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';
+const accessToken = 'add-your-github-generated-token';
 
 // Define the base folder and the folders to compare
 const baseFolder = 'stg-ui-config';
