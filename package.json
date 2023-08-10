@@ -1,0 +1,16 @@
+{
+    "name": "github-environment-compare",
+    "version": "1.0.0",
+    "description": "Compare environment properties in a GitHub repository",
+    "main": "compareEnvironments.js",
+    "type": "module",
+    "scripts": {
+        "start": "node compareEnvironments.js"
+    },
+    "author": "VishalS",
+    "license": "ISC",
+    "dependencies": {
+        "dotenv": "^10.0.0",
+        "node-fetch": "^2.6.12"
+    }
+}
