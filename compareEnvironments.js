@@ -5,7 +5,7 @@ import { Octokit } from '@octokit/rest';
 
 const repoOwner = 'QQyrus';
 const repoName = 'ui-configuration';
-const accessToken = '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';
+const accessToken = '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';
 
 // Define the base folder and the folders to compare
 const baseFolder = 'stg-ui-config';
@@ -113,14 +113,14 @@ async function addMissingPropertiesToFile(folder, contentOnTargetFolder, missing
       contentOnTargetFolder = contentOnTargetFolder.slice(0, insertionPoint) + propertiesToAdd + contentOnTargetFolder.slice(insertionPoint);
     }
 
-  console.log('Added missing properties: ', contentOnTargetFolder);
+  // console.log('Added missing properties: ', contentOnTargetFolder);
 
   await commitChanges(folder, contentOnTargetFolder);
 }
 
 async function commitChanges(folder, content) {
   const octokit = new Octokit({
-    auth: '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' // Replace with your GitHub Personal Access Token
+    auth: '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' // Replace with your GitHub Personal Access Token
   });
 
   const commitMessage = 'Added Missing Properties';
