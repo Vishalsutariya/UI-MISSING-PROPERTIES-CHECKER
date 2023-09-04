@@ -9,7 +9,7 @@ app.use(express.json());
 
 const repoOwner = 'QQyrus';
 const repoName = 'ui-configuration';
-const accessToken = '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';
+const accessToken = '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';
 
 // Define the base folder and the folders to compare
 const baseFolder = 'stg-ui-config';
@@ -33,7 +33,7 @@ app.get('/compare-and-add', async (req, res) => {
   const baseProperties = extractProperties(baseContent);
   console.log("base properties extracted...")
 
-  let missingPropertiesObject = [];
+  let missingPropertiesObject = {};
   for (const folder of foldersToCompare) {
     const contentToCompare = await fetchEnvironmentFileContent(`${folder}/environment.prod.ts`);
 
@@ -57,21 +57,10 @@ app.get('/compare-and-add', async (req, res) => {
     // const missingProperties = baseProperties.filter(prop => !propertiesToCompare.includes(prop));
     missingProperties.forEach(prop => console.log(prop));
 
-    const temp = {
-      folder: missingProperties
-    }
-
-    if(missingProperties.length>0) missingPropertiesObject.push(temp);
-
-    console.log('-----------------------');
+    if (missingProperties.length > 0) missingPropertiesObject[folder] = missingProperties;
+    console.log('-----------------------', missingPropertiesObject);
   }
-
-  if (missingPropertiesObject.length > 0) {
-    res.status(200).json(missingPropertiesObject);
-  } else {
-    res.status(200).json(`No missing properties found`);
-  }
-
+  res.status(200).json(missingPropertiesObject);
 
   // if (missingProperties.length > 0) {
   //     await addMissingProperties(folder, missingProperties);
