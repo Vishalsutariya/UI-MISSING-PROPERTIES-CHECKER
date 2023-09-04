@@ -27,44 +27,51 @@ app.get('/', (req, res) => {
 
 app.get('/compare-and-add', async (req, res) => {
 
-  const baseContent = await fetchEnvironmentFileContent(`${baseFolder}/environment.prod.ts`);
-  if (!baseContent) {
-    console.error(`Failed to fetch ${baseFolder}/environment.prod.ts`);
-    return;
-  }
-
-  console.log("extracting base properties...")
-  const baseProperties = extractProperties(baseContent);
-  console.log("base properties extracted...")
-
-  let missingPropertiesObject = {};
-  for (const folder of foldersToCompare) {
-    const contentToCompare = await fetchEnvironmentFileContent(`${folder}/environment.prod.ts`);
-
-    if (!contentToCompare) {
-      console.error(`Failed to fetch ${folder}/environment.prod.ts`);
-      continue;
+  try {
+    const baseContent = await fetchEnvironmentFileContent(`${baseFolder}/environment.prod.ts`);
+    if (!baseContent) {
+      console.error(`Failed to fetch ${baseFolder}/environment.prod.ts`);
+      return;
     }
 
-    const propertiesToCompare = extractProperties(contentToCompare);
+    console.log("extracting base properties...")
+    const baseProperties = extractProperties(baseContent);
+    console.log("base properties extracted...")
 
-    console.log(`Missing properties in ${folder}:`);
-    const basePropertiesSet = new Set(baseProperties)
-    const propertiesToCompareSet = new Set(propertiesToCompare)
+    let missingPropertiesObject = {};
+    for (const folder of foldersToCompare) {
+      const contentToCompare = await fetchEnvironmentFileContent(`${folder}/environment.prod.ts`);
 
-    const missingProperties = [];
-    basePropertiesSet.forEach(item => {
-      if (!propertiesToCompareSet.has(item)) {
-        missingProperties.push(item);
+      if (!contentToCompare) {
+        console.error(`Failed to fetch ${folder}/environment.prod.ts`);
+        continue;
       }
-    });
-    // const missingProperties = baseProperties.filter(prop => !propertiesToCompare.includes(prop));
-    missingProperties.forEach(prop => console.log(prop));
 
-    if (missingProperties.length > 0) missingPropertiesObject[folder] = missingProperties;
-    console.log('-----------------------');
+      const propertiesToCompare = extractProperties(contentToCompare);
+
+      console.log(`Missing properties in ${folder}:`);
+      const basePropertiesSet = new Set(baseProperties)
+      const propertiesToCompareSet = new Set(propertiesToCompare)
+
+      const missingProperties = [];
+      basePropertiesSet.forEach(item => {
+        if (!propertiesToCompareSet.has(item)) {
+          missingProperties.push(item);
+        }
+      });
+      // const missingProperties = baseProperties.filter(prop => !propertiesToCompare.includes(prop));
+      missingProperties.forEach(prop => console.log(prop));
+
+      if (missingProperties.length > 0) missingPropertiesObject[folder] = missingProperties;
+      console.log('-----------------------');
+    }
+    res.status(200).json(missingPropertiesObject);
   }
-  res.status(200).json(missingPropertiesObject);
+  catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'An error occurred while fetching the missing properties.' });
+  }
+
 
   // if (missingProperties.length > 0) {
   //     await addMissingProperties(folder, missingProperties);
@@ -94,7 +101,7 @@ async function fetchEnvironmentFileContent(filePath) {
     }
   } catch (error) {
     console.error(error);
-    return null;
+    return error;
   }
 }
 
