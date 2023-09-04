@@ -1,6 +1,7 @@
 import express from 'express';
 import fetch from 'node-fetch';
 import { Octokit } from '@octokit/rest';
+import cors from 'cors';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -9,13 +10,16 @@ app.use(express.json());
 
 const repoOwner = 'QQyrus';
 const repoName = 'ui-configuration';
-const accessToken = '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';
+const accessToken = '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';
 
 // Define the base folder and the folders to compare
 const baseFolder = 'stg-ui-config';
 const foldersToCompare = ['ccep-ui-config', 'cleco-ui-config', 'johndeere-ui-config', 'monument-ui-config', 'prod-ui-config', 'qyrus-ui-config',
   'qyrus-uk-ui-config', 'rccd-ui-config', 'shawbrook-ui-config', 'sia-ui-config', 'truist-ui-config', 'tsb-ui-config', 'uat-ui-config',
   'unum-ui-config', 'valley-ui-config', 'vitas-ui-config', 'wm-ui-config']; // Add more folders as needed
+
+
+app.use(cors());
 
 app.get('/', (req, res) => {
   res.send('Welcome to the API for comparing and adding missing properties.');
@@ -58,7 +62,7 @@ app.get('/compare-and-add', async (req, res) => {
     missingProperties.forEach(prop => console.log(prop));
 
     if (missingProperties.length > 0) missingPropertiesObject[folder] = missingProperties;
-    console.log('-----------------------', missingPropertiesObject);
+    console.log('-----------------------');
   }
   res.status(200).json(missingPropertiesObject);
 
