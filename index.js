@@ -9,7 +9,7 @@ app.use(express.json());
 
 const repoOwner = 'QQyrus';
 const repoName = 'ui-configuration';
-const accessToken = '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';
+const accessToken = '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';
 
 // Define the base folder and the folders to compare
 const baseFolder = 'stg-ui-config';
@@ -21,7 +21,7 @@ app.get('/', (req, res) => {
   res.send('Welcome to the API for comparing and adding missing properties.');
 });
 
-app.get('/compare-and-add', async (res) => {
+app.get('/compare-and-add', async (req, res) => {
 
   const baseContent = await fetchEnvironmentFileContent(`${baseFolder}/environment.prod.ts`);
   if (!baseContent) {
@@ -33,6 +33,7 @@ app.get('/compare-and-add', async (res) => {
   const baseProperties = extractProperties(baseContent);
   console.log("base properties extracted...")
 
+  let missingPropertiesObject = [];
   for (const folder of foldersToCompare) {
     const contentToCompare = await fetchEnvironmentFileContent(`${folder}/environment.prod.ts`);
 
@@ -41,11 +42,7 @@ app.get('/compare-and-add', async (res) => {
       continue;
     }
 
-    // console.log("extracting target properties for ", folder)
     const propertiesToCompare = extractProperties(contentToCompare);
-    // console.log("target properties extracted for ", folder);
-
-    // console.log('-----------------------');
 
     console.log(`Missing properties in ${folder}:`);
     const basePropertiesSet = new Set(baseProperties)
@@ -60,23 +57,21 @@ app.get('/compare-and-add', async (res) => {
     // const missingProperties = baseProperties.filter(prop => !propertiesToCompare.includes(prop));
     missingProperties.forEach(prop => console.log(prop));
 
-    if (missingProperties.length > 0) {
-      // await addMissingPropertiesToFile(folder, contentToCompare, missingProperties);
-      // res.status(200).json({ message: 'Missing properties added and changes committed.' });
-      // res.status(200).json({ message: 'Missing properties are found' });
-    } else {
-      console.log(`No missing properties in ${folder}`);
-      // res.status(200).json({ message: 'No missing properties found.' });
+    const temp = {
+      folder: missingProperties
     }
 
+    if(missingProperties.length>0) missingPropertiesObject.push(temp);
+
     console.log('-----------------------');
-    // console.log('-----------------------');
   }
 
-  res.send('Comparison Done!');
+  if (missingPropertiesObject.length > 0) {
+    res.status(200).json(missingPropertiesObject);
+  } else {
+    res.status(200).json(`No missing properties found`);
+  }
 
-
-  // const missingProperties = getMissingProperties(folder);
 
   // if (missingProperties.length > 0) {
   //     await addMissingProperties(folder, missingProperties);
