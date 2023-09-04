@@ -9,14 +9,13 @@ app.use(express.json());
 
 const repoOwner = 'QQyrus';
 const repoName = 'ui-configuration';
-const accessToken = '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';
+const accessToken = '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';
 
 // Define the base folder and the folders to compare
 const baseFolder = 'stg-ui-config';
-const foldersToCompare = ['adib-ui-config', 'bcg-ui-config', 'ccep-ui-config', 'cleco-ui-config', 'johndeere-ui-config', 'littelfuse-ui-config',
-  'mashreq-ui-config', 'maxdigital-ui-config', 'monument-ui-config', 'prod-ui-config', 'qyrus-ui-config', 'qyrus-uk-ui-config',
-  'rccd-ui-config', 'shawbrook-ui-config', 'sia-ui-config', 'truist-ui-config', 'tsb-ui-config', 'uat-ui-config', 'unum-ui-config',
-  'valley-ui-config', 'vitas-ui-config', 'wm-ui-config']; // Add more folders as needed
+const foldersToCompare = ['ccep-ui-config', 'cleco-ui-config', 'johndeere-ui-config', 'monument-ui-config', 'prod-ui-config', 'qyrus-ui-config',
+  'qyrus-uk-ui-config', 'rccd-ui-config', 'shawbrook-ui-config', 'sia-ui-config', 'truist-ui-config', 'tsb-ui-config', 'uat-ui-config',
+  'unum-ui-config', 'valley-ui-config', 'vitas-ui-config', 'wm-ui-config']; // Add more folders as needed
 
 app.get('/', (req, res) => {
   res.send('Welcome to the API for comparing and adding missing properties.');
@@ -42,11 +41,11 @@ app.get('/compare-and-add', async (res) => {
       continue;
     }
 
-    console.log("extracting target properties for ", folder)
+    // console.log("extracting target properties for ", folder)
     const propertiesToCompare = extractProperties(contentToCompare);
-    console.log("target properties extracted for ", folder);
+    // console.log("target properties extracted for ", folder);
 
-    console.log('-----------------------');
+    // console.log('-----------------------');
 
     console.log(`Missing properties in ${folder}:`);
     const basePropertiesSet = new Set(baseProperties)
@@ -71,7 +70,7 @@ app.get('/compare-and-add', async (res) => {
     }
 
     console.log('-----------------------');
-    console.log('-----------------------');
+    // console.log('-----------------------');
   }
 
   res.send('Comparison Done!');
