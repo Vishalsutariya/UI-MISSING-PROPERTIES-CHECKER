@@ -2,15 +2,18 @@ import express from 'express';
 import fetch from 'node-fetch';
 import { Octokit } from '@octokit/rest';
 import cors from 'cors';
+import bodyParser from 'body-parser';
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
+app.use(bodyParser.json());
+app.use(cors());
 
 const repoOwner = 'QQyrus';
 const repoName = 'ui-configuration';
-const accessToken = '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';
+var accessToken = '';
 
 // Define the base folder and the folders to compare
 const baseFolder = 'stg-ui-config';
@@ -18,15 +21,13 @@ const foldersToCompare = ['ccep-ui-config', 'cleco-ui-config', 'johndeere-ui-con
   'qyrus-uk-ui-config', 'rccd-ui-config', 'shawbrook-ui-config', 'sia-ui-config', 'truist-ui-config', 'tsb-ui-config', 'uat-ui-config',
   'unum-ui-config', 'valley-ui-config', 'vitas-ui-config', 'wm-ui-config']; // Add more folders as needed
 
-
-app.use(cors());
-
 app.get('/', (req, res) => {
   res.send('Welcome to the API for comparing and adding missing properties.');
 });
 
-app.get('/compare-and-add', async (req, res) => {
+app.post('/compare-and-add', async (req, res) => {
 
+  accessToken = req.body.githubToken;
   try {
     const baseContent = await fetchEnvironmentFileContent(`${baseFolder}/environment.prod.ts`);
     if (!baseContent) {
