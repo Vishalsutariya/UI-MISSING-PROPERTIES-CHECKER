@@ -17,9 +17,10 @@ var accessToken = '';
 
 // Define the base folder and the folders to compare
 const baseFolder = 'stg-ui-config';
-const foldersToCompare = ['ccep-ui-config', 'cleco-ui-config', 'johndeere-ui-config', 'monument-ui-config', 'prod-ui-config', 'qyrus-ui-config',
-  'qyrus-uk-ui-config', 'rccd-ui-config', 'shawbrook-ui-config', 'sia-ui-config', 'truist-ui-config', 'tsb-ui-config', 'uat-ui-config',
-  'unum-ui-config', 'valley-ui-config', 'vitas-ui-config', 'wm-ui-config']; // Add more folders as needed
+const foldersToCompare = ['ccep-ui-config']
+// , 'cleco-ui-config', 'johndeere-ui-config', 'monument-ui-config', 'prod-ui-config', 'qyrus-ui-config',
+//   'qyrus-uk-ui-config', 'rccd-ui-config', 'shawbrook-ui-config', 'sia-ui-config', 'truist-ui-config', 'tsb-ui-config', 'uat-ui-config',
+//   'unum-ui-config', 'valley-ui-config', 'vitas-ui-config', 'wm-ui-config']; // Add more folders as needed
 
 app.get('/', (req, res) => {
   res.send('Welcome to the API for comparing and adding missing properties.');
@@ -117,7 +118,46 @@ function extractProperties(fileContent) {
   return matches || [];
 }
 
-async function addMissingPropertiesToFile(folder, contentOnTargetFolder, missingProperties) {
+app.post('/add-missing-properties', async (req, res) => {
+  const missingProperties = req.body.missingProperties;
+  // const missingProperties = [
+  //   { "environment": "ccep-ui-config", "values": { "TEST1": "", "TEST2": "" } },
+  //   { "environment": "cleco-ui-config", "values": { "TEST1": "", "TEST2": "", "TEST3": "" } },
+  //   { "environment": "johndeere-ui-config", "values": { "TEST1": "" } },
+  //   { "environment": "monument-ui-config", "values": { "TEST1": "" } },
+  //   { "environment": "prod-ui-config", "values": { "TEST1": "" } },
+  //   { "environment": "qyrus-ui-config", "values": { "TEST1": "" } },
+  //   { "environment": "qyrus-uk-ui-config", "values": { "TEST1": "" } },
+  //   { "environment": "rccd-ui-config", "values": { "TEST1": "" } },
+  //   { "environment": "shawbrook-ui-config", "values": { "TEST1": "" } },
+  //   { "environment": "sia-ui-config", "values": { "TEST1": "" } },
+  //   { "environment": "truist-ui-config", "values": { "TEST1": "" } },
+  //   { "environment": "tsb-ui-config", "values": { "TEST1": "" } },
+  //   { "environment": "uat-ui-config", "values": { "TEST1": "" } },
+  //   { "environment": "unum-ui-config", "values": { "TEST1": "" } },
+  //   { "environment": "valley-ui-config", "values": { "TEST1": "" } },
+  //   { "environment": "vitas-ui-config", "values": { "TEST1": "" } },
+  //   { "environment": "wm-ui-config", "values": { "TEST1": "" } }]
+  accessToken = req.body.githubToken;
+
+  const promises = missingProperties.map(async (prop) => {
+    const contentOnTargetFolder = await fetchEnvironmentFileContent(`${prop.environment}/environment.prod.ts`);
+
+    if (!contentOnTargetFolder) {
+      console.error(`Failed to fetch ${prop.environment}/environment.prod.ts`);
+      return;
+    }
+
+    await addMissingPropertiesToFile(accessToken, prop.environment, contentOnTargetFolder, prop.values);
+  })
+
+  await Promise.all(promises);
+
+  res.status(200).json({ message: 'Missing properties added and changes committed.' });
+});
+
+
+async function addMissingPropertiesToFile(githubToken, folder, contentOnTargetFolder, missingProperties) {
   // const lines = contentOnTargetFolder.split('\n');
 
   // // console.log("Lines", lines);
@@ -129,20 +169,45 @@ async function addMissingPropertiesToFile(folder, contentOnTargetFolder, missing
   //   return line;
   // }).join('\n');
 
+  // Convert the object to an array
+  var propertyArray = Object.keys(missingProperties).map(function (key) {
+    return {
+      key: key,
+      value: missingProperties[key]
+    };
+  });
+
+  // Now propertyArray contains the array of objects
+  console.log("Property Array", propertyArray);
+  console.log("Content on Target Folder", contentOnTargetFolder);
+
   const insertionPoint = contentOnTargetFolder.lastIndexOf('}');
+
   if (insertionPoint !== -1) {
-    const propertiesToAdd = missingProperties.map(prop => `  ${prop}: 'NEW_VALUE',`).join('\n');
-    contentOnTargetFolder = contentOnTargetFolder.slice(0, insertionPoint) + propertiesToAdd + contentOnTargetFolder.slice(insertionPoint);
+    let propertiesToAdd = propertyArray.map(prop => `  ${prop.key}: '${prop.value}',`).join('\n');
+
+    // Check if there's already a comma at the end of the initial data
+    const initialData = contentOnTargetFolder.slice(0, insertionPoint).trim();
+    if (initialData.charAt(initialData.length - 1) === ',') {
+      propertiesToAdd = '\n' + propertiesToAdd // Remove leading spaces on each line
+    } else {
+      propertiesToAdd = ',\n' + propertiesToAdd; // Add a comma and a new line before properties
+    }
+
+    contentOnTargetFolder =
+      initialData + propertiesToAdd + '\n' + contentOnTargetFolder.slice(insertionPoint).trim();
   }
 
-  // console.log('Added missing properties: ', contentOnTargetFolder);
 
-  await commitChanges(folder, contentOnTargetFolder);
+
+  console.log('Added missing properties: ', contentOnTargetFolder);
+
+  // await commitChanges(githubToken, folder, contentOnTargetFolder);
 }
 
-async function commitChanges(folder, content) {
+async function commitChanges(githubToken, folder, content) {
   const octokit = new Octokit({
-    auth: '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' // Replace with your GitHub Personal Access Token
+    auth: githubToken // Replace with your GitHub Personal Access Token
   });
 
   const commitMessage = 'Added Missing Properties';
