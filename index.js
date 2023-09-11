@@ -120,25 +120,9 @@ function extractProperties(fileContent) {
 
 app.post('/add-missing-properties', async (req, res) => {
   const missingProperties = req.body.missingProperties;
-  // const missingProperties = [
-  //   { "environment": "ccep-ui-config", "values": { "TEST1": "", "TEST2": "" } },
-  //   { "environment": "cleco-ui-config", "values": { "TEST1": "", "TEST2": "", "TEST3": "" } },
-  //   { "environment": "johndeere-ui-config", "values": { "TEST1": "" } },
-  //   { "environment": "monument-ui-config", "values": { "TEST1": "" } },
-  //   { "environment": "prod-ui-config", "values": { "TEST1": "" } },
-  //   { "environment": "qyrus-ui-config", "values": { "TEST1": "" } },
-  //   { "environment": "qyrus-uk-ui-config", "values": { "TEST1": "" } },
-  //   { "environment": "rccd-ui-config", "values": { "TEST1": "" } },
-  //   { "environment": "shawbrook-ui-config", "values": { "TEST1": "" } },
-  //   { "environment": "sia-ui-config", "values": { "TEST1": "" } },
-  //   { "environment": "truist-ui-config", "values": { "TEST1": "" } },
-  //   { "environment": "tsb-ui-config", "values": { "TEST1": "" } },
-  //   { "environment": "uat-ui-config", "values": { "TEST1": "" } },
-  //   { "environment": "unum-ui-config", "values": { "TEST1": "" } },
-  //   { "environment": "valley-ui-config", "values": { "TEST1": "" } },
-  //   { "environment": "vitas-ui-config", "values": { "TEST1": "" } },
-  //   { "environment": "wm-ui-config", "values": { "TEST1": "" } }]
   accessToken = req.body.githubToken;
+
+  let commitLinkArray = [];
 
   const promises = missingProperties.map(async (prop) => {
     const contentOnTargetFolder = await fetchEnvironmentFileContent(`${prop.environment}/environment.prod.ts`);
@@ -148,12 +132,15 @@ app.post('/add-missing-properties', async (req, res) => {
       return;
     }
 
-    await addMissingPropertiesToFile(accessToken, prop.environment, contentOnTargetFolder, prop.values);
+    const commitLink =  await addMissingPropertiesToFile(accessToken, prop.environment, contentOnTargetFolder, prop.values);
+    // commitLinkArray["Added missing properties for " + prop.environment] = commitLink;
+    commitLinkArray.push({ environment: prop.environment, commitLink });
   })
 
   await Promise.all(promises);
 
-  res.status(200).json({ message: 'Missing properties added and changes committed.' });
+  console.log("commitLinkArray:", commitLinkArray);
+  await res.status(200).json(commitLinkArray);
 });
 
 
@@ -178,8 +165,8 @@ async function addMissingPropertiesToFile(githubToken, folder, contentOnTargetFo
   });
 
   // Now propertyArray contains the array of objects
-  console.log("Property Array", propertyArray);
-  console.log("Content on Target Folder", contentOnTargetFolder);
+  // console.log("Property Array", propertyArray);
+  // console.log("Content on Target Folder", contentOnTargetFolder);
 
   const insertionPoint = contentOnTargetFolder.lastIndexOf('}');
 
@@ -200,9 +187,10 @@ async function addMissingPropertiesToFile(githubToken, folder, contentOnTargetFo
 
 
 
-  console.log('Added missing properties: ', contentOnTargetFolder);
+  // console.log('Added missing properties: ', contentOnTargetFolder);
 
-  // await commitChanges(githubToken, folder, contentOnTargetFolder);
+  const commitURL = await commitChanges(githubToken, folder, contentOnTargetFolder);
+  return commitURL;
 }
 
 async function commitChanges(githubToken, folder, content) {
@@ -231,6 +219,7 @@ async function commitChanges(githubToken, folder, content) {
     });
 
     console.log(`Changes committed to ${folder}/environment.prod.ts: ${response.data.commit.html_url}`);
+    return response.data.commit.html_url;
   } catch (error) {
     console.error(`Failed to commit changes to ${folder}/environment.prod.ts`, error);
   }
