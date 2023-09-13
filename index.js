@@ -3,6 +3,7 @@ import fetch from 'node-fetch';
 import { Octokit } from '@octokit/rest';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import axios from 'axios';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -17,8 +18,8 @@ var accessToken = '';
 
 // Define the base folder and the folders to compare
 const baseFolder = 'stg-ui-config';
-const foldersToCompare = ['ccep-ui-config']
-// , 'cleco-ui-config', 'johndeere-ui-config', 'monument-ui-config', 'prod-ui-config', 'qyrus-ui-config',
+// const foldersToCompare = ['ccep-ui-config'
+//   , 'cleco-ui-config', 'johndeere-ui-config', 'monument-ui-config', 'prod-ui-config', 'qyrus-ui-config',
 //   'qyrus-uk-ui-config', 'rccd-ui-config', 'shawbrook-ui-config', 'sia-ui-config', 'truist-ui-config', 'tsb-ui-config', 'uat-ui-config',
 //   'unum-ui-config', 'valley-ui-config', 'vitas-ui-config', 'wm-ui-config']; // Add more folders as needed
 
@@ -29,6 +30,10 @@ app.get('/', (req, res) => {
 app.post('/compare-and-add', async (req, res) => {
 
   accessToken = req.body.githubToken;
+  
+  const foldersToCompare = await fetchEnvironmentFolders();
+  // console.log('Folders:', folders);
+
   try {
     const baseContent = await fetchEnvironmentFileContent(`${baseFolder}/environment.prod.ts`);
     if (!baseContent) {
@@ -84,6 +89,29 @@ app.post('/compare-and-add', async (req, res) => {
   // }
 });
 
+async function fetchEnvironmentFolders(){
+  const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents`;
+  try {
+    const response = await fetch(apiUrl, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const environmentFolders = data.filter(item => item.type === 'dir').map(item => item.name);
+      console.log('Folders:', environmentFolders);
+      return environmentFolders;
+    } else {
+      throw new Error(`Failed to fetch environement folders`);
+    }
+  } catch (error) {
+    console.error(error);
+    return error;
+  }
+}
+
 async function fetchEnvironmentFileContent(filePath) {
   const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`;
   try {
@@ -132,7 +160,7 @@ app.post('/add-missing-properties', async (req, res) => {
       return;
     }
 
-    const commitLink =  await addMissingPropertiesToFile(accessToken, prop.environment, contentOnTargetFolder, prop.values);
+    const commitLink = await addMissingPropertiesToFile(accessToken, prop.environment, contentOnTargetFolder, prop.values);
     // commitLinkArray["Added missing properties for " + prop.environment] = commitLink;
     commitLinkArray.push({ environment: prop.environment, commitLink });
   })
